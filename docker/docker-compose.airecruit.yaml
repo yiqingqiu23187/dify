@@ -1,0 +1,58 @@
+# Dify 自定义配置 - 用于 AI 蓝领招聘项目
+# 此文件覆盖 docker-compose.yaml 的网络配置，让 Dify 加入 airecruit-network
+
+# 使用方式：
+# docker-compose -f docker-compose.yaml -f docker-compose.airecruit.yaml up -d
+
+version: '3.8'
+
+services:
+  # API 服务 - 核心服务，AI Agent 会调用它
+  api:
+    networks:
+      - default
+      - airecruit-network
+    environment:
+      # 允许 AI Agent 通过 MCP 回调
+      - MCP_SERVER_URL=http://ai_agent:8000/mcp
+
+  # Worker 服务
+  worker:
+    networks:
+      - default
+      - airecruit-network
+
+  # Web 服务（如果需要访问 Dify UI）
+  web:
+    networks:
+      - default
+      - airecruit-network
+
+  # Nginx 服务
+  nginx:
+    networks:
+      - default
+      - airecruit-network
+    ports:
+      - "8080:80"  # 修改端口避免冲突
+
+  # Plugin Daemon 服务
+  plugin_daemon:
+    networks:
+      - default
+      - airecruit-network
+
+  # PostgreSQL 数据库
+  db_postgres:
+    networks:
+      - default
+
+networks:
+  # 使用外部已存在的 airecruit-network
+  airecruit-network:
+    external: true
+    name: airecruit-network
+
+  # 保留 Dify 内部网络
+  default:
+    driver: bridge
